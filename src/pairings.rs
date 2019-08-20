@@ -11,7 +11,7 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use group::Group;
 use pairing::{Engine, PairingCurveAffine};
 use rand_core::RngCore;
-use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
@@ -222,6 +222,18 @@ impl Gt {
     /// Doubles this group element.
     pub fn double(&self) -> Gt {
         Gt(self.0.square())
+    }
+
+    /// Serializes this element into uncompressed form. See [`notes::serialization`](crate::notes::serialization)
+    /// for details about how group elements are serialized.
+    pub fn to_uncompressed(&self) -> [u8; 576] {
+        self.0.to_bytes()
+    }
+
+    /// Attempts to deserialize an uncompressed element. See [`notes::serialization`](crate::notes::serialization)
+    /// for details about how group elements are serialized.
+    pub fn from_uncompressed(bytes: &[u8; 576]) -> CtOption<Self> {
+        Fp12::from_bytes(bytes).map(|x| Gt(x))
     }
 }
 

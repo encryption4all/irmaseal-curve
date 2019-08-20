@@ -253,7 +253,7 @@ impl Fp2 {
 
         CtOption::new(Fp2::zero(), self.is_zero()).or_else(|| {
             // a1 = self^((p - 3) / 4)
-            let a1 = self.pow_vartime(&[
+            let a1 = self.pow_vartime_extended(&[
                 0xee7f_bfff_ffff_eaaa,
                 0x07aa_ffff_ac54_ffff,
                 0xd9cc_34a8_3dac_3d89,
@@ -282,7 +282,7 @@ impl Fp2 {
             // Otherwise, the correct solution is (1 + alpha)^((q - 1) // 2) * x0
             .or_else(|| {
                 CtOption::new(
-                    (alpha + Fp2::one()).pow_vartime(&[
+                    (alpha + Fp2::one()).pow_vartime_extended(&[
                         0xdcff_7fff_ffff_d555,
                         0x0f55_ffff_58a9_ffff,
                         0xb398_6950_7b58_7b12,
@@ -323,10 +323,10 @@ impl Fp2 {
         })
     }
 
-    /// Although this is labeled "vartime", it is only
-    /// variable time with respect to the exponent. It
-    /// is also not exposed in the public API.
-    pub fn pow_vartime(&self, by: &[u64; 6]) -> Self {
+    /// Vartime exponentiation for larger exponents, only
+    /// used in testing and not exposed through the public API.
+    #[cfg(all(test, feature = "experimental"))]
+    pub(crate) fn pow_extended_extended(&self, by: &[u64]) -> Self {
         let mut res = Self::one();
         for e in by.iter().rev() {
             for i in (0..64).rev() {
@@ -340,20 +340,30 @@ impl Fp2 {
         res
     }
 
-    /// Vartime exponentiation for larger exponents, only
-    /// used in testing and not exposed through the public API.
-    #[cfg(all(test, feature = "experimental"))]
-    pub(crate) fn pow_vartime_extended(&self, by: &[u64]) -> Self {
-        let mut res = Self::one();
-        for e in by.iter().rev() {
-            for i in (0..64).rev() {
-                res = res.square();
+    /// Attempts to convert a little-endian byte representation of
+    /// a scalar into an `Fp2`.
+    ///
+    /// Only fails when the underlying Fp elements are not canonical,
+    /// but not when `Fp2` is not part of the subgroup.
+    pub fn from_bytes_unchecked(bytes: &[u8; 96]) -> CtOption<Fp2> {
+        let mut buf = [0u8; 48];
 
-                if ((*e >> i) & 1) == 1 {
-                    res *= self;
-                }
-            }
-        }
+        buf.copy_from_slice(&bytes[0..48]);
+        let c0 = Fp::from_bytes(&buf);
+        buf.copy_from_slice(&bytes[48..96]);
+        let c1 = Fp::from_bytes(&buf);
+
+        c0.and_then(|c0| c1.map(|c1| Fp2 { c0, c1 }))
+    }
+
+    /// Converts an element of `Fp2` into a byte representation in
+    /// big-endian byte order.
+    pub fn to_bytes(&self) -> [u8; 96] {
+        let mut res = [0; 96];
+
+        res[0..48].copy_from_slice(&self.c0.to_bytes());
+        res[48..96].copy_from_slice(&self.c1.to_bytes());
+
         res
     }
 }
