@@ -205,6 +205,12 @@ impl ConditionallySelectable for Gt {
     }
 }
 
+impl Default for Gt {
+    fn default() -> Gt {
+        Gt::identity()
+    }
+}
+
 impl Eq for Gt {}
 impl PartialEq for Gt {
     #[inline]
