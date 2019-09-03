@@ -142,6 +142,20 @@ impl Fp6 {
         }
     }
 
+    /// Returns whether or not this element is strictly lexicographically
+    /// larger than its negation.
+    #[inline]
+    pub fn lexicographically_largest(&self) -> Choice {
+        // If this element's c1 coefficient is lexicographically largest
+        // then it is lexicographically largest. Otherwise, in the event
+        // the c1 coefficient is zero and the c0 coefficient is
+        // lexicographically largest, then this element is lexicographically
+        // largest.
+
+        self.c1.lexicographically_largest()
+            | (self.c1.is_zero() & self.c0.lexicographically_largest())
+    }
+
     /// Raises this element to p.
     #[inline(always)]
     pub fn frobenius_map(&self) -> Self {
@@ -200,6 +214,10 @@ impl Fp6 {
             c1: s4.mul_by_nonresidue() + s1,
             c2: s1 + s2 + s3 - s0 - s4,
         }
+    }
+
+    pub fn sqrt(&self) -> CtOption<Self> {
+        unimplemented!();
     }
 
     #[inline]
