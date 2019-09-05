@@ -216,8 +216,122 @@ impl Fp6 {
         }
     }
 
+    /// Square root
+    ///
+    /// As described by:
+    /// "On the Computation of Square Roots in Finite Fields", proposition 2.1
+    /// By Siguna Müller, 2004
+    ///
+    /// Uses the fact that p^6 = 9 mod 16.
     pub fn sqrt(&self) -> CtOption<Self> {
-        unimplemented!();
+        // Q_1_4 = (modulus^6 - 1) / 4
+        const Q_1_4: [u64; 36] = [
+            0xb1b26118f01c175a,
+            0xf8a2683cfd2fcb7,
+            0xf5ecead6e31ae561,
+            0x788892a3ae5aaa66,
+            0x6f1b989afdd74c6c,
+            0x44b0febfb9ca2f19,
+            0xaa44afead22b2a8c,
+            0x44412b069787405b,
+            0x1d4f314ef085b227,
+            0xa3438bfd9d5dc836,
+            0x3aca6af3d8e4c9cd,
+            0x9233ff8daf86758b,
+            0xf183aa79f6a23e1e,
+            0x9285a7b5ef849914,
+            0x3392479651e7cbc1,
+            0xba3bd9bd93f0e78e,
+            0x1681362d6278bb82,
+            0xbf9fb30183701059,
+            0x8e8e4f1c7eea8aa5,
+            0xe0eba5f5b90a8877,
+            0x82c196b55e440708,
+            0x476387890d02af5e,
+            0x733d7734aebdd85b,
+            0x233beef2d2cc2a7b,
+            0xfe1257e301d152ee,
+            0x977cd3e02d91b8c0,
+            0x1a7e36349a50bf5b,
+            0xf734044b05c5b0a7,
+            0x6455a14c3662f861,
+            0xedea13251b5203df,
+            0x714e2975915a9a71,
+            0x817b0e2e3d10781d,
+            0x52fd761dc052d57d,
+            0x3c8b51fa3d322987,
+            0x687d273175e44744,
+            0x49b8ea73982,
+        ];
+
+        // Note: 2^((p^6-1)/4) = 1 in Fp6, so s^2 = self^((p^6-1)/2),
+        // so Legendre-symbol, hence self is a quadratic residue iff s = 1 or s = -1.
+        // TODO: use addition chains.
+        let s = (self + self).pow_vartime(&Q_1_4);
+
+        let v = Fp6 {
+            c0: Fp2::zero(),
+            c1: Fp2::one(),
+            c2: Fp2::zero(),
+        };
+
+        let is_one = s.ct_eq(&Fp6::one());
+        let is_neg_one = s.ct_eq(&-Fp6::one());
+
+        let d = Fp6::conditional_select(&v, &-Fp6::one(), is_one);
+
+        // Q_9_16 = (modulus^6 - 9) / 16
+        const Q_9_16: [u64; 36] = [
+            0xec6c98463c0705d6,
+            0x43e289a0f3f4bf2d,
+            0xbd7b3ab5b8c6b958,
+            0x1e2224a8eb96aa99,
+            0x5bc6e626bf75d31b,
+            0x112c3fafee728bc6,
+            0xea912bfab48acaa3,
+            0xd1104ac1a5e1d016,
+            0x8753cc53bc216c89,
+            0x68d0e2ff6757720d,
+            0xceb29abcf6393273,
+            0xa48cffe36be19d62,
+            0x3c60ea9e7da88f87,
+            0x64a169ed7be12645,
+            0x8ce491e59479f2f0,
+            0xae8ef66f64fc39e3,
+            0x45a04d8b589e2ee0,
+            0x6fe7ecc060dc0416,
+            0xe3a393c71fbaa2a9,
+            0x383ae97d6e42a21d,
+            0xa0b065ad579101c2,
+            0xd1d8e1e24340abd7,
+            0xdccf5dcd2baf7616,
+            0x88cefbbcb4b30a9e,
+            0x3f8495f8c07454bb,
+            0xe5df34f80b646e30,
+            0xc69f8d8d26942fd6,
+            0x7dcd0112c1716c29,
+            0xd91568530d98be18,
+            0x7b7a84c946d480f7,
+            0x5c538a5d6456a69c,
+            0x605ec38b8f441e07,
+            0xd4bf5d877014b55f,
+            0xf22d47e8f4c8a61,
+            0x9a1f49cc5d7911d1,
+            0x126e3a9ce60,
+        ];
+
+        let dd = d * d;
+        let ddx = dd * self;
+
+        // TODO: use addition chains.
+        let z = (ddx + ddx).pow_vartime(&Q_9_16);
+
+        let hi = ddx * z * z;
+        let i = hi + hi;
+
+        let a = z * d * self * (i - Fp6::one());
+
+        CtOption::new(a, is_one | is_neg_one)
     }
 
     #[inline]
@@ -239,6 +353,23 @@ impl Fp6 {
             c1: t * c1,
             c2: t * c2,
         })
+    }
+
+    /// Although this is labeled "vartime", it is only
+    /// variable time with respect to the exponent. It
+    /// is also not exposed in the public API.
+    pub fn pow_vartime(&self, by: &[u64]) -> Self {
+        let mut res = Self::one();
+        for e in by.iter().rev() {
+            for i in (0..64).rev() {
+                res = res.square();
+
+                if ((*e >> i) & 1) == 1 {
+                    res *= self;
+                }
+            }
+        }
+        res
     }
 
     /// Attempts to convert a little-endian byte representation of
