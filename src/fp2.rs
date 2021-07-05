@@ -247,6 +247,22 @@ impl Fp2 {
         }
     }
 
+    /// Vartime exponentiation for larger exponents, only
+    /// used in testing and not exposed through the public API.
+    pub(crate) fn pow_vartime_extended(&self, by: &[u64]) -> Self {
+        let mut res = Self::one();
+        for e in by.iter().rev() {
+            for i in (0..64).rev() {
+                res = res.square();
+
+                if ((*e >> i) & 1) == 1 {
+                    res *= self;
+                }
+            }
+        }
+        res
+    }
+
     pub fn sqrt(&self) -> CtOption<Self> {
         // Algorithm 9, https://eprint.iacr.org/2012/685.pdf
         // with constant time modifications.
@@ -321,23 +337,6 @@ impl Fp2 {
             c0: self.c0 * t,
             c1: self.c1 * -t,
         })
-    }
-
-    /// Vartime exponentiation for larger exponents, only
-    /// used in testing and not exposed through the public API.
-    #[cfg(all(test, feature = "experimental"))]
-    pub(crate) fn pow_extended_extended(&self, by: &[u64]) -> Self {
-        let mut res = Self::one();
-        for e in by.iter().rev() {
-            for i in (0..64).rev() {
-                res = res.square();
-
-                if ((*e >> i) & 1) == 1 {
-                    res *= self;
-                }
-            }
-        }
-        res
     }
 
     /// Attempts to convert a big-endian byte representation into an `Fp2`.

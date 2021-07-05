@@ -2,7 +2,7 @@ use crate::fp::Fp;
 use crate::fp12::Fp12;
 use crate::fp2::Fp2;
 use crate::fp6::Fp6;
-use crate::{G1Affine, G2Affine, G2Projective, Scalar, BLS_X, BLS_X_IS_NEGATIVE};
+use crate::{G1Affine, G1Projective, G2Affine, G2Projective, Scalar, BLS_X, BLS_X_IS_NEGATIVE};
 
 use core::borrow::Borrow;
 use core::fmt;
@@ -184,7 +184,7 @@ impl_add_binop_specify_output!(MillerLoopResult, MillerLoopResult, MillerLoopRes
 /// Typically, $\mathbb{G}_T$ is written multiplicatively but we will write it additively to
 /// keep code and abstractions consistent.
 #[cfg_attr(docsrs, doc(cfg(feature = "pairings")))]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug)]
 pub struct Gt(pub(crate) Fp12);
 
 impl fmt::Display for Gt {
