@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate criterion;
 
-extern crate bls12_381;
-use bls12_381::*;
+extern crate irmaseal_curve;
+use irmaseal_curve::*;
 
 use criterion::{black_box, Criterion};
 
