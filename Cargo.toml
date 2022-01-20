@@ -6,8 +6,8 @@ homepage = "https://github.com/encryption4all/irmaseal-curve"
 license = "MIT/Apache-2.0"
 name = "irmaseal-curve"
 repository = "https://github.com/encryption4all/irmaseal-curve"
-version = "0.1.2"
-edition = "2018"
+version = "0.1.4"
+edition = "2021"
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
