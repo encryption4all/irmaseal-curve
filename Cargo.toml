@@ -1,12 +1,12 @@
 [package]
 authors = ["Wouter Geraedts <git@woutergeraedts.nl>", "Sean Bowe <ewillbefull@gmail.com>", "Jack Grigg <thestr4d@gmail.com>"]
-description = "Fork of the BLS12-381 pairing-friendly elliptic curve construction for IRMAseal"
-documentation = "https://docs.rs/irmaseal-curve/"
-homepage = "https://github.com/encryption4all/irmaseal-curve"
+description = "Fork of the BLS12-381 pairing-friendly elliptic curve construction with target group serialization"
+documentation = "https://docs.rs/pg-curve/"
+homepage = "https://github.com/encryption4all/pg-curve"
 license = "MIT/Apache-2.0"
-name = "irmaseal-curve"
-repository = "https://github.com/encryption4all/irmaseal-curve"
-version = "0.1.4"
+name = "pg-curve"
+repository = "https://github.com/encryption4all/pg-curve"
+version = "0.2.0"
 edition = "2021"
 
 [package.metadata.docs.rs]
