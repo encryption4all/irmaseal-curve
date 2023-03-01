@@ -39,6 +39,7 @@ version = "0.13"
 default-features = false
 
 [dependencies.group]
+version = "0.13"
 default-features = false
 optional = true
 
