@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate criterion;
 
-extern crate irmaseal_curve;
-use irmaseal_curve::*;
+extern crate pg_curve;
+use pg_curve::*;
 
 use criterion::{black_box, Criterion};
 
